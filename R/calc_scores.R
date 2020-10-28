@@ -5,6 +5,7 @@
 #' with regard to MASE, sMAPE, MSIS, Spread, Coverage and Upper coverage. 
 #' @param dataset the list containing the series. See details for the required format.
 #' @param parallel logical. If \code{TRUE} then the calculations are conducted in parallel.
+#' @param num.cores the specified amount of parallel processes to be used if parallel = TRUE.
 #' 
 #' @details 
 #' \code{dataset} must be a list with each element having the following format:
@@ -47,7 +48,7 @@
 #' @importFrom foreach foreach
 #' @importFrom stats frequency
 #' @export
-calc_scores <- function(dataset, parallel = FALSE) {
+calc_scores <- function(dataset, parallel = FALSE, num.cores = 2) {
   
   scores_fun <- function(input){
     lapply(input, function(lentry){
@@ -69,7 +70,7 @@ calc_scores <- function(dataset, parallel = FALSE) {
       
       # interval forecasting accuracy
       ## MSIS; Spread; Coverage; UpperCoverage
-      msis <- spread <- IfInn <- IfInu <- NULL
+      msis <- spread <- IfInn <- IfInu <- IfInl <- NULL
       for (i in seq_len(length(lower))){
         low <- lower[[i]]
         up <- upper[[i]]
@@ -80,18 +81,21 @@ calc_scores <- function(dataset, parallel = FALSE) {
         spread0 <- (up - low) / scaling
         IfInn0 <- ifelse(xx > low & xx < up, 1, 0)
         IfInu0 <- ifelse(xx < up, 1, 0)
+        IfInl0 <- ifelse(xx > low, 1, 0)
         msis <- append(msis, list(msis0))
         spread <- append(spread, list(spread0))
         IfInn <- append(IfInn, list(IfInn0))
         IfInu <- append(IfInu, list(IfInu0))
+        IfInl <- append(IfInl, list(IfInl0))
       }
-      names(msis) <- names(spread) <- names(IfInn) <- names(IfInu) <- names(lower)
+      names(msis) <- names(spread) <- names(IfInn) <- names(IfInu) <- names(IfInl) <- names(lower)
       lentry$MASE <- mase
       lentry$sMAPE <- smape
       lentry$MSIS <- msis
       lentry$Spread <- spread
       lentry$IfInn <- IfInn
       lentry$IfInu <- IfInu
+      lentry$IfInl <- IfInl
       return(lentry)
     })
   }
@@ -99,7 +103,7 @@ calc_scores <- function(dataset, parallel = FALSE) {
   if (parallel == FALSE){
     ret_list <- scores_fun(dataset)
   } else {
-    ncores <- parallel::detectCores()
+    ncores <- num.cores
     ncores <- ifelse(length(dataset) < ncores, length(dataset), ncores)
     times_sp <- c(rep(floor(length(dataset)/ncores), ncores - 1), 
                   length(dataset) - floor(length(dataset)/ncores) * (ncores - 1))

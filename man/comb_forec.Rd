@@ -4,8 +4,17 @@
 \alias{comb_forec}
 \title{Combinate the forecasts and prediction intervals by assigned weights and threshold ratio}
 \usage{
-comb_forec(dataset, weightprob, Threshold, level, combine = "mean",
-  methodname = "comb", show.methods = FALSE, parallel = FALSE)
+comb_forec(
+  dataset,
+  weightprob,
+  Threshold,
+  level,
+  combine = "mean",
+  methodname = "comb",
+  show.methods = FALSE,
+  parallel = FALSE,
+  num.cores = 2
+)
 }
 \arguments{
 \item{dataset}{a list of time series. See details for the required format.}
@@ -29,6 +38,8 @@ appended to a vector. This vector contains the names of methods that are selecte
 model averaging.}
 
 \item{parallel}{logical. If \code{TRUE} then the calculations are conducted in parallel.}
+
+\item{num.cores}{the specified amount of parallel processes to be used if parallel = TRUE.}
 }
 \value{
 A list with the elements having the following structure
